@@ -1,36 +1,25 @@
-import { Message } from "@/types";
-import { OpenAIStream } from "@/utils";
+import type { NextApiRequest, NextApiResponse } from 'next';
 
-export const config = {
-  runtime: "edge"
-};
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const { prompt, sessionId } = req.body;
 
-const handler = async (req: Request): Promise<Response> => {
-  try {
-    const { messages } = (await req.json()) as {
-      messages: Message[];
-    };
+  const hook = process.env.NEXT_PUBLIC_MAKE_WEBHOOK!;
+  console.log('→ Hitting Make:', hook);          // debug line
 
-    const charLimit = 12000;
-    let charCount = 0;
-    let messagesToSend = [];
+  const makeRes = await fetch(hook, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: prompt, user_id: sessionId })
+  });
 
-    for (let i = 0; i < messages.length; i++) {
-      const message = messages[i];
-      if (charCount + message.content.length > charLimit) {
-        break;
-      }
-      charCount += message.content.length;
-      messagesToSend.push(message);
-    }
-
-    const stream = await OpenAIStream(messagesToSend);
-
-    return new Response(stream);
-  } catch (error) {
-    console.error(error);
-    return new Response("Error", { status: 500 });
+  if (!makeRes.ok) {
+    return res.status(500).json({ error: 'Make request failed' });
   }
-};
 
-export default handler;
+  const { answer } = await makeRes.json();
+  res.status(200).json({ answer });
+}
+git config --global user.email hello@entreprana.io
