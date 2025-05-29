@@ -9,6 +9,8 @@ export default async function handler(
   const hook = process.env.NEXT_PUBLIC_MAKE_WEBHOOK!;
   console.log('→ Hitting Make:', hook);          // debug line
 
+console.log('→ proxying to Make:', hook);
+
   const makeRes = await fetch(hook, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
