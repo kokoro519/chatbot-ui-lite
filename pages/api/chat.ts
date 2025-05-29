@@ -22,4 +22,3 @@ export default async function handler(
   const { answer } = await makeRes.json();
   res.status(200).json({ answer });
 }
-git config --global user.email hello@entreprana.io
